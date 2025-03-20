@@ -1,0 +1,24 @@
+
+STT Services Comparison Report
+Generated on: 2025-03-20 20:54:06
+
+Total Files Tested: 3
+
+Success Rate:
+- Deepgram: 3/3 (100.0%)
+- AssemblyAI: 3/3 (100.0%)
+- Gladia: 3/3 (100.0%)
+
+Average Processing Time:
+- Deepgram: 3.14 seconds
+- AssemblyAI: 6.85 seconds
+- Gladia: 1.75 seconds
+
+Average Confidence Score:
+- Deepgram: 0.65
+- AssemblyAI: 0.76
+- Gladia: 0.00
+
+Recommendation:
+Deepgram shows the best reliability with highest success rate.
+Gladia processes files the fastest.

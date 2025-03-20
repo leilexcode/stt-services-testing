@@ -1,0 +1,23 @@
+{
+  "file_name": "test_audio_eng.mp3",
+  "file_size": 1190382,
+  "timestamp": "2025-03-20T21:47:22.800833",
+  "services": {
+    "deepgram": {
+      "transcript": "despite centuries of maritime exploration we have mapped less than twenty percent of our ocean floors in detail leaving more than eighty percent of the ocean largely une unemployed the deepest point the challenger deep in the mariana trench plunge just nearly eleven kilometers below sea level the mount everest as stall scientists estimate that millions of undiscovered species still inhabit these mysterious depths",
+      "processing_time": 2.867072105407715,
+      "confidence": 0.99316406,
+      "success": true
+    },
+    "assemblyai": {
+      "transcript": "Despite centuries of maritime exploration, we have mapped less than 20% of our ocean floors in detail, leaving more than 80% of the ocean largely unexplored. The deepest point, the Challenger deep in the Mariana trench, plunges nearly 11 kilometers below sea level, deeper than Mount Everest. Astol scientists estimate that millions of undiscovered species still inhabit these mysterious depths.",
+      "processing_time": 6.444822072982788,
+      "confidence": 0.95389986,
+      "success": true
+    },
+    "gladia": {
+      "error": "Gladia transcription error: 201 - {\"id\":\"79fb3051-8399-48fa-9887-57c332d20b6f\",\"result_url\":\"https://api.gladia.io/v2/pre-recorded/79fb3051-8399-48fa-9887-57c332d20b6f\"}",
+      "success": false
+    }
+  }
+}

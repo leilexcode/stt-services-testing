@@ -1,0 +1,23 @@
+{
+  "file_name": "test_audio_kr.mp3",
+  "file_size": 9493074,
+  "timestamp": "2025-03-20T21:46:55.412017",
+  "services": {
+    "deepgram": {
+      "transcript": "",
+      "processing_time": 12.57864499092102,
+      "confidence": 0.0,
+      "success": true
+    },
+    "assemblyai": {
+      "transcript": "Yorubunan otan chimigai style using oton and donga. Hagway style. Kirigo yorubani to wahana on donga siroana on dongam boyo. Take a load. I'm gadget.",
+      "processing_time": 7.631971120834351,
+      "confidence": 0.6156224,
+      "success": true
+    },
+    "gladia": {
+      "error": "Gladia transcription error: 201 - {\"id\":\"f510a0ab-0a7c-4a4f-a221-d4ab08f0db2e\",\"result_url\":\"https://api.gladia.io/v2/pre-recorded/f510a0ab-0a7c-4a4f-a221-d4ab08f0db2e\"}",
+      "success": false
+    }
+  }
+}

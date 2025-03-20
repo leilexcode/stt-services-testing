@@ -1,0 +1,23 @@
+{
+  "file_name": "test_audio.mp3",
+  "file_size": 1025289,
+  "timestamp": "2025-03-20T21:47:36.289016",
+  "services": {
+    "deepgram": {
+      "transcript": "rainforest oxygen carbon natural so twenty five percent",
+      "processing_time": 3.6446428298950195,
+      "confidence": 0.9633789,
+      "success": true
+    },
+    "assemblyai": {
+      "transcript": "Ang manga Rainforest a Hindi la mang nagli began Oxygen at sumasalon carbon dioxide Kundinag sisil bearing natural Nagamot bahai nanagdataglai nung mangahalaman naginagamit so 25% nangatimanga modern ang pagpo protect us Rainforest a Hindi la mang parasakali kasan kundipararin sahin abu kasan ang sankata uhan.",
+      "processing_time": 5.352933883666992,
+      "confidence": 0.6973413,
+      "success": true
+    },
+    "gladia": {
+      "error": "Gladia transcription error: 201 - {\"id\":\"dadbb4e7-8f49-46e6-b11d-3f7dce20e7ed\",\"result_url\":\"https://api.gladia.io/v2/pre-recorded/dadbb4e7-8f49-46e6-b11d-3f7dce20e7ed\"}",
+      "success": false
+    }
+  }
+}
