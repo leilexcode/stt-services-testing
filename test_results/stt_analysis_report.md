@@ -4,14 +4,14 @@ Audio File: test_audio.mp3
 
 ## Deepgram Results
 Status: ✅ Success
-Processing Time: 2.94s
+Processing Time: 3.32s
 Confidence: 96.44%
 Transcript:
 rainforest oxygen carbon natural so twenty five percent
 
 ## AssemblyAI Results
 Status: ✅ Success
-Processing Time: 6.43s
+Processing Time: 5.27s
 Confidence: 69.73%
 Transcript:
 Ang manga Rainforest a Hindi la mang nagli began Oxygen at sumasalon carbon dioxide Kundinag sisil bearing natural Nagamot bahai nanagdataglai nung mangahalaman naginagamit so 25% nangatimanga modern ang pagpo protect us Rainforest a Hindi la mang parasakali kasan kundipararin sahin abu kasan ang sankata uhan.
@@ -25,8 +25,8 @@ Transcript:
 
 ## Comparison Summary
 1. Processing Speed:
-   - Deepgram: 2.94s
-   - AssemblyAI: 6.43s
+   - Deepgram: 3.32s
+   - AssemblyAI: 5.27s
    - Gladia: 0
 
 2. Confidence Scores:

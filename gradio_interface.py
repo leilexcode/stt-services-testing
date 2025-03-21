@@ -1,23 +1,23 @@
 import gradio as gr
-import json
+import os
 from pathlib import Path
 from deepgram_test import transcribe_deepgram
 from assemblyai_test import transcribe_assemblyai
 from gladia_test import transcribe_gladia
 import time
 
-def process_audio(audio_path):
-    """Process audio file and return comparison results."""
+def process_audio(audio_file):
+    """Process audio through all three services and return formatted results"""
     results = {
-        "deepgram": {"transcript": "", "time": 0, "status": "❌ Failed"},
-        "assemblyai": {"transcript": "", "time": 0, "status": "❌ Failed"},
-        "gladia": {"transcript": "", "time": 0, "status": "❌ Failed"}
+        "deepgram": {"status": "❌ Failed"},
+        "assemblyai": {"status": "❌ Failed"},
+        "gladia": {"status": "❌ Failed"}
     }
     
-    # Test Deepgram
     try:
+        # Process with Deepgram
         start_time = time.time()
-        deepgram_result = transcribe_deepgram(audio_path)
+        deepgram_result = transcribe_deepgram(audio_file)
         deepgram_time = time.time() - start_time
         
         # Extract just the transcript from Deepgram's response
@@ -25,36 +25,36 @@ def process_audio(audio_path):
         confidence = deepgram_result.get("results", {}).get("channels", [{}])[0].get("alternatives", [{}])[0].get("confidence", 0)
         
         results["deepgram"] = {
+            "status": "✅ Success",
             "transcript": transcript,
             "time": f"{deepgram_time:.2f}s",
-            "confidence": f"{confidence:.2%}",
-            "status": "✅ Success"
+            "confidence": f"{confidence:.2%}"
         }
     except Exception as e:
         results["deepgram"]["error"] = str(e)
     
-    # Test AssemblyAI
     try:
+        # Process with AssemblyAI
         start_time = time.time()
-        assemblyai_result = transcribe_assemblyai(audio_path)
+        assemblyai_result = transcribe_assemblyai(audio_file)
         assemblyai_time = time.time() - start_time
         
         transcript = assemblyai_result.get("text", "")
         confidence = assemblyai_result.get("confidence", 0)
         
         results["assemblyai"] = {
+            "status": "✅ Success",
             "transcript": transcript,
             "time": f"{assemblyai_time:.2f}s",
-            "confidence": f"{confidence:.2%}",
-            "status": "✅ Success"
+            "confidence": f"{confidence:.2%}"
         }
     except Exception as e:
         results["assemblyai"]["error"] = str(e)
     
-    # Test Gladia
     try:
+        # Process with Gladia
         start_time = time.time()
-        gladia_result = transcribe_gladia(audio_path)
+        gladia_result = transcribe_gladia(audio_file)
         gladia_time = time.time() - start_time
         
         # Handle Gladia response structure
@@ -72,39 +72,41 @@ def process_audio(audio_path):
             confidence = gladia_result.get("confidence", 1.0)
         
         results["gladia"] = {
+            "status": "✅ Success",
             "transcript": transcript,
             "time": f"{gladia_time:.2f}s",
-            "confidence": f"{confidence:.2%}",
-            "status": "✅ Success"
+            "confidence": f"{confidence:.2%}"
         }
     except Exception as e:
         results["gladia"]["error"] = str(e)
     
-    # Format the output
-    output = f"""
-### Deepgram Results
-**Status:** {results['deepgram']['status']}
-**Processing Time:** {results['deepgram'].get('time', 'N/A')}
-**Confidence:** {results['deepgram'].get('confidence', 'N/A')}
-**Transcript:**
-{results['deepgram']['transcript']}
+    # Format results as markdown
+    markdown = """
+# Transcription Results
 
-### AssemblyAI Results
-**Status:** {results['assemblyai']['status']}
-**Processing Time:** {results['assemblyai'].get('time', 'N/A')}
-**Confidence:** {results['assemblyai'].get('confidence', 'N/A')}
-**Transcript:**
-{results['assemblyai']['transcript']}
+## Deepgram
+**Status**: {deepgram[status]}
+**Processing Time**: {deepgram[time]}
+**Confidence**: {deepgram[confidence]}
+**Transcript**:
+{deepgram[transcript]}
 
-### Gladia Results
-**Status:** {results['gladia']['status']}
-**Processing Time:** {results['gladia'].get('time', 'N/A')}
-**Confidence:** {results['gladia'].get('confidence', 'N/A')}
-**Transcript:**
-{results['gladia']['transcript']}
-"""
+## AssemblyAI
+**Status**: {assemblyai[status]}
+**Processing Time**: {assemblyai[time]}
+**Confidence**: {assemblyai[confidence]}
+**Transcript**:
+{assemblyai[transcript]}
+
+## Gladia
+**Status**: {gladia[status]}
+**Processing Time**: {gladia[time]}
+**Confidence**: {gladia[confidence]}
+**Transcript**:
+{gladia[transcript]}
+""".format(**results)
     
-    return output
+    return markdown
 
 # Create Gradio interface
 with gr.Blocks(title="STT Service Comparison", theme=gr.themes.Soft()) as demo:
@@ -134,11 +136,18 @@ with gr.Blocks(title="STT Service Comparison", theme=gr.themes.Soft()) as demo:
         outputs=[output]
     )
 
+    gr.Markdown("""
+    ### Notes:
+    - Supported formats: MP3, WAV
+    - For best results, use clear audio with minimal background noise
+    - Processing may take a few seconds
+    """)
+
 if __name__ == "__main__":
     demo.launch(
-        server_name="127.0.0.1",
-        server_port=7861,
-        share=False,
-        show_error=True,
-        favicon_path=None
+        share=True,  # Enable public URL
+        server_name="0.0.0.0",  # Allow external connections
+        server_port=7860,  # Use default port
+        show_error=True,  # Show detailed error messages
+        debug=True  # Enable debug mode for more information
     ) 
