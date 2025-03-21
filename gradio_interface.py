@@ -5,13 +5,40 @@ from deepgram_test import transcribe_deepgram
 from assemblyai_test import transcribe_assemblyai
 from gladia_test import transcribe_gladia
 import time
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def process_audio(audio_file):
     """Process audio through all three services and return formatted results"""
+    if not audio_file:
+        return "Please upload an audio file first."
+    
+    # Initialize results with default values for all required keys
     results = {
-        "deepgram": {"status": "❌ Failed"},
-        "assemblyai": {"status": "❌ Failed"},
-        "gladia": {"status": "❌ Failed"}
+        "deepgram": {
+            "status": "❌ Failed",
+            "transcript": "No transcript available",
+            "time": "N/A",
+            "confidence": "N/A",
+            "error": None
+        },
+        "assemblyai": {
+            "status": "❌ Failed",
+            "transcript": "No transcript available",
+            "time": "N/A",
+            "confidence": "N/A",
+            "error": None
+        },
+        "gladia": {
+            "status": "❌ Failed",
+            "transcript": "No transcript available",
+            "time": "N/A",
+            "confidence": "N/A",
+            "error": None
+        }
     }
     
     try:
@@ -24,14 +51,20 @@ def process_audio(audio_file):
         transcript = deepgram_result.get("results", {}).get("channels", [{}])[0].get("alternatives", [{}])[0].get("transcript", "")
         confidence = deepgram_result.get("results", {}).get("channels", [{}])[0].get("alternatives", [{}])[0].get("confidence", 0)
         
-        results["deepgram"] = {
+        results["deepgram"].update({
             "status": "✅ Success",
-            "transcript": transcript,
+            "transcript": transcript or "No transcript available",
             "time": f"{deepgram_time:.2f}s",
             "confidence": f"{confidence:.2%}"
-        }
+        })
+        logger.info("Deepgram transcription completed successfully")
     except Exception as e:
-        results["deepgram"]["error"] = str(e)
+        error_msg = str(e)
+        results["deepgram"].update({
+            "error": error_msg,
+            "transcript": f"Error: {error_msg}"
+        })
+        logger.error(f"Deepgram error: {error_msg}")
     
     try:
         # Process with AssemblyAI
@@ -42,14 +75,20 @@ def process_audio(audio_file):
         transcript = assemblyai_result.get("text", "")
         confidence = assemblyai_result.get("confidence", 0)
         
-        results["assemblyai"] = {
+        results["assemblyai"].update({
             "status": "✅ Success",
-            "transcript": transcript,
+            "transcript": transcript or "No transcript available",
             "time": f"{assemblyai_time:.2f}s",
             "confidence": f"{confidence:.2%}"
-        }
+        })
+        logger.info("AssemblyAI transcription completed successfully")
     except Exception as e:
-        results["assemblyai"]["error"] = str(e)
+        error_msg = str(e)
+        results["assemblyai"].update({
+            "error": error_msg,
+            "transcript": f"Error: {error_msg}"
+        })
+        logger.error(f"AssemblyAI error: {error_msg}")
     
     try:
         # Process with Gladia
@@ -71,14 +110,20 @@ def process_audio(audio_file):
             
             confidence = gladia_result.get("confidence", 1.0)
         
-        results["gladia"] = {
+        results["gladia"].update({
             "status": "✅ Success",
-            "transcript": transcript,
+            "transcript": transcript or "No transcript available",
             "time": f"{gladia_time:.2f}s",
             "confidence": f"{confidence:.2%}"
-        }
+        })
+        logger.info("Gladia transcription completed successfully")
     except Exception as e:
-        results["gladia"]["error"] = str(e)
+        error_msg = str(e)
+        results["gladia"].update({
+            "error": error_msg,
+            "transcript": f"Error: {error_msg}"
+        })
+        logger.error(f"Gladia error: {error_msg}")
     
     # Format results as markdown
     markdown = """
@@ -121,7 +166,8 @@ with gr.Blocks(title="STT Service Comparison", theme=gr.themes.Soft()) as demo:
         with gr.Column():
             audio_input = gr.Audio(
                 label="Upload Audio",
-                type="filepath"
+                type="filepath",
+                sources=["microphone", "upload"]
             )
     
     with gr.Row():
@@ -139,15 +185,15 @@ with gr.Blocks(title="STT Service Comparison", theme=gr.themes.Soft()) as demo:
     gr.Markdown("""
     ### Notes:
     - Supported formats: MP3, WAV
-    - For best results, use clear audio with minimal background noise
     - Processing may take a few seconds
     """)
 
 if __name__ == "__main__":
     demo.launch(
-        share=True,  # Enable public URL
-        server_name="0.0.0.0",  # Allow external connections
-        server_port=7860,  # Use default port
-        show_error=True,  # Show detailed error messages
-        debug=True  # Enable debug mode for more information
+        server_name="127.0.0.1",  # Use localhost instead of 0.0.0.0
+        server_port=7860,
+        share=False,  # Disable share feature to avoid manifest.json issues
+        show_error=True,
+        debug=True,
+        favicon_path=None  # Disable favicon to avoid 404
     ) 

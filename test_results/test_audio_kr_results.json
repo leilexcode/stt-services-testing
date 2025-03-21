@@ -1,17 +1,17 @@
 {
   "file_name": "test_audio_kr.mp3",
   "file_size": 9493074,
-  "timestamp": "2025-03-20T23:07:44.097239",
+  "timestamp": "2025-03-21T17:37:25.510387",
   "services": {
     "deepgram": {
       "transcript": "",
-      "processing_time": 4.368739128112793,
+      "processing_time": 148.35783195495605,
       "confidence": 0.0,
       "success": true
     },
     "assemblyai": {
       "transcript": "Yorubunan otan chimigai style using oton and donga. Hagway style. Kirigo yorubani to wahana on donga siroana on dongam boyo. Take a load. I'm gadget.",
-      "processing_time": 12.54312014579773,
+      "processing_time": 157.23365187644958,
       "confidence": 0.6156224,
       "success": true
     }
