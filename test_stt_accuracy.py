@@ -7,7 +7,6 @@ from pathlib import Path
 from datetime import datetime
 from deepgram_test import transcribe_deepgram
 from assemblyai_test import transcribe_assemblyai
-from gladia_test import transcribe_gladia
 
 # Set up logging
 logging.basicConfig(
@@ -26,7 +25,7 @@ class STTAccuracyTester:
         self.results_dir.mkdir(exist_ok=True)
         
     def process_audio_file(self, audio_file: Path) -> Dict[str, Any]:
-        """Process a single audio file with all services and return results."""
+        """Process a single audio file with both services and return results."""
         results = {
             "file_name": audio_file.name,
             "file_size": audio_file.stat().st_size,
@@ -59,48 +58,15 @@ class STTAccuracyTester:
             assemblyai_result = transcribe_assemblyai(str(audio_file))
             assemblyai_time = time.time() - start_time
             
-            # Handle AssemblyAI response structure
-            transcript = ""
-            confidence = 0
-            
-            if isinstance(assemblyai_result, dict):
-                transcript = assemblyai_result.get("text", "")
-                confidence = assemblyai_result.get("confidence", 0)
-            elif isinstance(assemblyai_result, str):
-                transcript = assemblyai_result
-                confidence = 1.0  # Default confidence if not provided
-            
             results["services"]["assemblyai"] = {
-                "transcript": transcript,
+                "transcript": assemblyai_result.get("text", ""),
                 "processing_time": assemblyai_time,
-                "confidence": confidence,
+                "confidence": assemblyai_result.get("confidence", 0),
                 "success": True
             }
         except Exception as e:
             logging.error(f"AssemblyAI error processing {audio_file.name}: {str(e)}")
             results["services"]["assemblyai"] = {
-                "error": str(e),
-                "success": False
-            }
-        
-        # Test Gladia
-        try:
-            start_time = time.time()
-            gladia_result = transcribe_gladia(str(audio_file))
-            gladia_time = time.time() - start_time
-            
-            results["services"]["gladia"] = {
-                "transcript": gladia_result.get("transcription", ""),
-                "processing_time": gladia_time,
-                "confidence": gladia_result.get("confidence", 1.0),
-                "success": True
-            }
-            
-            # Log the raw response for debugging
-            logging.info(f"Gladia raw response: {gladia_result}")
-        except Exception as e:
-            logging.error(f"Gladia error processing {audio_file.name}: {str(e)}")
-            results["services"]["gladia"] = {
                 "error": str(e),
                 "success": False
             }
@@ -134,8 +100,6 @@ class STTAccuracyTester:
                 logging.info(f"Deepgram transcript: {results['services']['deepgram']['transcript'][:100]}...")
             if results["services"]["assemblyai"]["success"]:
                 logging.info(f"AssemblyAI transcript: {results['services']['assemblyai']['transcript'][:100]}...")
-            if results["services"]["gladia"]["success"]:
-                logging.info(f"Gladia transcript: {results['services']['gladia']['transcript'][:100]}...")
 
 if __name__ == "__main__":
     tester = STTAccuracyTester()

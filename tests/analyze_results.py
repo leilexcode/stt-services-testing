@@ -1,118 +1,152 @@
-import json
-import logging
+import os
+import time
 from pathlib import Path
-from typing import Dict, List, Any
-from datetime import datetime
+from deepgram_test import transcribe_deepgram
+from assemblyai_test import transcribe_assemblyai
+from gladia_test import transcribe_gladia
+import logging
 
-class STTResultAnalyzer:
-    def __init__(self, results_dir: str = "test_results"):
-        self.results_dir = Path(results_dir)
-        
-    def load_all_results(self) -> List[Dict[str, Any]]:
-        """Load all result files from the results directory."""
-        results = []
-        for result_file in self.results_dir.glob("*_results.json"):
-            with open(result_file, 'r') as f:
-                results.append(json.load(f))
-        return results
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(message)s'
+)
+logger = logging.getLogger(__name__)
+
+def analyze_stt_services(audio_path):
+    """Analyze and compare results from all STT services."""
+    results = {
+        "deepgram": {"transcript": "", "time": 0, "status": "❌ Failed"},
+        "assemblyai": {"transcript": "", "time": 0, "status": "❌ Failed"},
+        "gladia": {"transcript": "", "time": 0, "status": "❌ Failed"}
+    }
     
-    def calculate_metrics(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Calculate various metrics from the test results."""
-        metrics = {
-            "total_files": len(results),
-            "successful_transcriptions": {
-                "deepgram": 0,
-                "assemblyai": 0
-            },
-            "average_processing_time": {
-                "deepgram": 0,
-                "assemblyai": 0
-            },
-            "average_confidence": {
-                "deepgram": 0,
-                "assemblyai": 0
-            }
+    # Test Deepgram
+    try:
+        start_time = time.time()
+        deepgram_result = transcribe_deepgram(audio_path)
+        deepgram_time = time.time() - start_time
+        
+        transcript = deepgram_result.get("results", {}).get("channels", [{}])[0].get("alternatives", [{}])[0].get("transcript", "")
+        confidence = deepgram_result.get("results", {}).get("channels", [{}])[0].get("alternatives", [{}])[0].get("confidence", 0)
+        
+        results["deepgram"] = {
+            "transcript": transcript,
+            "time": f"{deepgram_time:.2f}s",
+            "confidence": f"{confidence:.2%}",
+            "status": "✅ Success"
         }
-        
-        deepgram_times = []
-        assemblyai_times = []
-        deepgram_confidences = []
-        assemblyai_confidences = []
-        
-        for result in results:
-            # Count successful transcriptions
-            if result["services"]["deepgram"].get("success", False):
-                metrics["successful_transcriptions"]["deepgram"] += 1
-                deepgram_times.append(result["services"]["deepgram"]["processing_time"])
-                deepgram_confidences.append(result["services"]["deepgram"]["confidence"])
-            
-            if result["services"]["assemblyai"].get("success", False):
-                metrics["successful_transcriptions"]["assemblyai"] += 1
-                assemblyai_times.append(result["services"]["assemblyai"]["processing_time"])
-                assemblyai_confidences.append(result["services"]["assemblyai"]["confidence"])
-        
-        # Calculate averages
-        if deepgram_times:
-            metrics["average_processing_time"]["deepgram"] = sum(deepgram_times) / len(deepgram_times)
-        if assemblyai_times:
-            metrics["average_processing_time"]["assemblyai"] = sum(assemblyai_times) / len(assemblyai_times)
-        if deepgram_confidences:
-            metrics["average_confidence"]["deepgram"] = sum(deepgram_confidences) / len(deepgram_confidences)
-        if assemblyai_confidences:
-            metrics["average_confidence"]["assemblyai"] = sum(assemblyai_confidences) / len(assemblyai_confidences)
-        
-        return metrics
+        logger.info("Deepgram transcription completed")
+    except Exception as e:
+        results["deepgram"]["error"] = str(e)
+        logger.error(f"Deepgram error: {str(e)}")
     
-    def generate_report(self, metrics: Dict[str, Any]):
-        """Generate a detailed comparison report."""
-        report = f"""
-STT Services Comparison Report
-Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+    # Test AssemblyAI
+    try:
+        start_time = time.time()
+        assemblyai_result = transcribe_assemblyai(audio_path)
+        assemblyai_time = time.time() - start_time
+        
+        transcript = assemblyai_result.get("text", "")
+        confidence = assemblyai_result.get("confidence", 0)
+        
+        results["assemblyai"] = {
+            "transcript": transcript,
+            "time": f"{assemblyai_time:.2f}s",
+            "confidence": f"{confidence:.2%}",
+            "status": "✅ Success"
+        }
+        logger.info("AssemblyAI transcription completed")
+    except Exception as e:
+        results["assemblyai"]["error"] = str(e)
+        logger.error(f"AssemblyAI error: {str(e)}")
+    
+    # Test Gladia
+    try:
+        start_time = time.time()
+        gladia_result = transcribe_gladia(audio_path)
+        gladia_time = time.time() - start_time
+        
+        results["gladia"] = {
+            "transcript": gladia_result.get("text", ""),
+            "time": f"{gladia_time:.2f}s",
+            "confidence": f"{gladia_result.get('confidence', 0):.2%}",
+            "status": "✅ Success"
+        }
+        logger.info("Gladia transcription completed")
+    except Exception as e:
+        results["gladia"]["error"] = str(e)
+        logger.error(f"Gladia error: {str(e)}")
+    
+    return results
 
-Total Files Tested: {metrics['total_files']}
+def generate_report(results, audio_file):
+    """Generate a detailed report of the analysis."""
+    report = f"""
+# STT Service Analysis Report
+Audio File: {os.path.basename(audio_file)}
 
-Success Rate:
-- Deepgram: {metrics['successful_transcriptions']['deepgram']}/{metrics['total_files']} ({metrics['successful_transcriptions']['deepgram']/metrics['total_files']*100:.1f}%)
-- AssemblyAI: {metrics['successful_transcriptions']['assemblyai']}/{metrics['total_files']} ({metrics['successful_transcriptions']['assemblyai']/metrics['total_files']*100:.1f}%)
+## Deepgram Results
+Status: {results['deepgram']['status']}
+Processing Time: {results['deepgram'].get('time', 'N/A')}
+Confidence: {results['deepgram'].get('confidence', 'N/A')}
+Transcript:
+{results['deepgram']['transcript']}
 
-Average Processing Time:
-- Deepgram: {metrics['average_processing_time']['deepgram']:.2f} seconds
-- AssemblyAI: {metrics['average_processing_time']['assemblyai']:.2f} seconds
+## AssemblyAI Results
+Status: {results['assemblyai']['status']}
+Processing Time: {results['assemblyai'].get('time', 'N/A')}
+Confidence: {results['assemblyai'].get('confidence', 'N/A')}
+Transcript:
+{results['assemblyai']['transcript']}
 
-Average Confidence Score:
-- Deepgram: {metrics['average_confidence']['deepgram']:.2f}
-- AssemblyAI: {metrics['average_confidence']['assemblyai']:.2f}
+## Gladia Results
+Status: {results['gladia']['status']}
+Processing Time: {results['gladia'].get('time', 'N/A')}
+Confidence: {results['gladia'].get('confidence', 'N/A')}
+Transcript:
+{results['gladia']['transcript']}
 
-Recommendation:
+## Comparison Summary
+1. Processing Speed:
+   - Deepgram: {results['deepgram'].get('time', 'N/A')}
+   - AssemblyAI: {results['assemblyai'].get('time', 'N/A')}
+   - Gladia: {results['gladia'].get('time', 'N/A')}
+
+2. Confidence Scores:
+   - Deepgram: {results['deepgram'].get('confidence', 'N/A')}
+   - AssemblyAI: {results['assemblyai'].get('confidence', 'N/A')}
+   - Gladia: {results['gladia'].get('confidence', 'N/A')}
+
+3. Success Status:
+   - Deepgram: {results['deepgram']['status']}
+   - AssemblyAI: {results['assemblyai']['status']}
+   - Gladia: {results['gladia']['status']}
 """
-        # Add recommendation based on metrics
-        if metrics['successful_transcriptions']['deepgram'] > metrics['successful_transcriptions']['assemblyai']:
-            report += "Deepgram shows better reliability with higher success rate."
-        elif metrics['successful_transcriptions']['assemblyai'] > metrics['successful_transcriptions']['deepgram']:
-            report += "AssemblyAI shows better reliability with higher success rate."
-        else:
-            report += "Both services show similar reliability."
-        
-        if metrics['average_processing_time']['deepgram'] < metrics['average_processing_time']['assemblyai']:
-            report += "\nDeepgram processes files faster."
-        elif metrics['average_processing_time']['assemblyai'] < metrics['average_processing_time']['deepgram']:
-            report += "\nAssemblyAI processes files faster."
-        else:
-            report += "\nBoth services have similar processing times."
-        
-        return report
+    return report
+
+def main():
+    # Create results directory if it doesn't exist
+    results_dir = Path("test_results")
+    results_dir.mkdir(exist_ok=True)
     
-    def save_report(self, report: str):
-        """Save the report to a file."""
-        report_file = self.results_dir / "comparison_report.txt"
-        with open(report_file, 'w') as f:
-            f.write(report)
-        logging.info(f"Report saved to {report_file}")
+    # Test audio file
+    audio_file = "audio_samples/test_audio.mp3"
+    
+    # Run analysis
+    logger.info("Starting STT service analysis...")
+    results = analyze_stt_services(audio_file)
+    
+    # Generate report
+    report = generate_report(results, audio_file)
+    
+    # Save report
+    report_file = results_dir / "stt_analysis_report.md"
+    with open(report_file, "w", encoding="utf-8") as f:
+        f.write(report)
+    
+    logger.info(f"Analysis complete. Report saved to {report_file}")
+    print(report)
 
 if __name__ == "__main__":
-    analyzer = STTResultAnalyzer()
-    results = analyzer.load_all_results()
-    metrics = analyzer.calculate_metrics(results)
-    report = analyzer.generate_report(metrics)
-    analyzer.save_report(report)
-    print(report) 
+    main() 

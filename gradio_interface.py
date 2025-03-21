@@ -20,6 +20,7 @@ def process_audio(audio_path):
         deepgram_result = transcribe_deepgram(audio_path)
         deepgram_time = time.time() - start_time
         
+        # Extract just the transcript from Deepgram's response
         transcript = deepgram_result.get("results", {}).get("channels", [{}])[0].get("alternatives", [{}])[0].get("transcript", "")
         confidence = deepgram_result.get("results", {}).get("channels", [{}])[0].get("alternatives", [{}])[0].get("confidence", 0)
         
@@ -56,8 +57,19 @@ def process_audio(audio_path):
         gladia_result = transcribe_gladia(audio_path)
         gladia_time = time.time() - start_time
         
-        transcript = gladia_result.get("transcription", "")
-        confidence = gladia_result.get("confidence", 1.0)
+        # Handle Gladia response structure
+        transcript = ""
+        confidence = 1.0  # Default confidence
+        
+        if isinstance(gladia_result, dict):
+            if "transcription" in gladia_result:
+                transcript = gladia_result["transcription"]
+            elif "text" in gladia_result:
+                transcript = gladia_result["text"]
+            elif "prediction" in gladia_result:
+                transcript = gladia_result["prediction"]
+            
+            confidence = gladia_result.get("confidence", 1.0)
         
         results["gladia"] = {
             "transcript": transcript,
@@ -65,9 +77,6 @@ def process_audio(audio_path):
             "confidence": f"{confidence:.2%}",
             "status": "✅ Success"
         }
-        
-        # Log the raw response for debugging
-        print(f"Gladia raw response: {gladia_result}")
     except Exception as e:
         results["gladia"]["error"] = str(e)
     
@@ -126,4 +135,10 @@ with gr.Blocks(title="STT Service Comparison", theme=gr.themes.Soft()) as demo:
     )
 
 if __name__ == "__main__":
-    demo.launch(share=True) 
+    demo.launch(
+        server_name="127.0.0.1",
+        server_port=7861,
+        share=False,
+        show_error=True,
+        favicon_path=None
+    ) 
